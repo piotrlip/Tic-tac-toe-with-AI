@@ -1,4 +1,5 @@
 from collections import deque
+import random
 
 
 def print_board(board_view):
@@ -21,7 +22,6 @@ def cells_to_board(board):
 
 
 def coord_check(game_board, move):
-
     if len(move[0]) > 1:
         print('You should enter numbers!')
         return False
@@ -30,16 +30,10 @@ def coord_check(game_board, move):
         print('You should enter numbers!')
         return False
 
-    #elif type(int(move[0])) is not int:
-        #print('You should enter numbers!')
-        #return False
-    #elif type(move[1]) is not int:
-        #print('You should enter numbers!')
-        #return False
     elif int(move[0]) - 1 not in [0, 1, 2] or int(move[1]) - 1 not in [0, 1, 2]:
         print('Coordinates should be from 1 to 3!')
         return False
-    elif game_board[int(move[0]) - 1][int(move[1]) - 1] != '_':
+    elif game_board[int(move[0]) - 1][int(move[1]) - 1] != ' ':
         print('This cell is occupied! Choose another one!')
         return False
     else:
@@ -78,44 +72,56 @@ def win_check(game_board):
     elif x_counter + y_counter == 9 and 'XXX' not in game_board_wins and 'OOO' not in game_board_wins:
         return 'Draw'
     elif x_counter + y_counter < 9 and 'XXX' not in game_board_wins and 'OOO' not in game_board_wins:
-        return 'Game not finished'
+        return 'Making move level "easy"'
 
-
-
-def player_move():
-
-
-board = " " * 9
-current_board = cells_to_board(board)
-print_board(current_board)
-
-game_board = current_board
-counter = 0
-x_counter2 = 0
-y_counter2 = 0
-for i in current_board:
-    for j in i:
-        if j == 'X':
-            x_counter2 += 1
-        elif j == 'O':
-            y_counter2 += 1
-
-if x_counter2 > y_counter2:
-    counter = 1
-elif x_counter2 < y_counter2:
-    counter = 0
 
 while True:
+    command = input('Input command')
+    good_commands = ['start easy easy', 'start easy user', 'start user user', 'start user easy']
+    if command in good_commands:
+        board = " " * 9
+        current_board = cells_to_board(board)
+        print_board(current_board)
+        game_board = current_board
+        counter = 0
+        while True:
+            if board_move(counter) == 'X':
+                un_move = input('Enter the coordinates:').split(' ')
+                if coord_check(current_board, un_move) is False:
+                    continue
+                else:
+                    move = [int(un_move[0]) - 1, int(un_move[1]) - 1]
+                    game_board[move[0]][move[1]] = 'X'
+                    print_board(game_board)
+                    counter += 1
+                    print(win_check(game_board))
+                    if win_check(game_board) == 'X wins' or win_check(game_board) == 'O wins' or win_check(
+                            game_board) == 'Draw':
+                        break
+            elif board_move(counter) == 'O':
+                while True:
+                    move = [0, 0]
+                    choice = [1, 2, 3]
+                    move[0] = str(random.choice(choice))
+                    move[1] = str(random.choice(choice))
+                    if coord_check(current_board, move) is False:
+                        continue
+                    else:
+                        break
+                move = [int(move[0]) - 1, int(move[1]) - 1]
+                game_board[int(move[0])][int(move[1])] = 'O'
+                print_board(game_board)
+                counter += 1
+                print(win_check(game_board))
+                if win_check(game_board) == 'X wins' or win_check(game_board) == 'O wins' or win_check(
+                        game_board) == 'Draw':
+                    break
+                else:
+                    continue
 
-    un_move = (input('Enter the coordinates')).split(' ')
-    if coord_check(current_board, un_move) is False:
-        continue
+    elif command == 'exit':
+        break
+
     else:
-        move = [int(un_move[0]) - 1, int(un_move[1]) - 1]
-        game_board[move[0]][move[1]] = board_move(counter)
-        print_board(game_board)
-        counter += 1
-        print(win_check(game_board))
-        if win_check(game_board) == 'X wins' or win_check(game_board) == 'O wins' or win_check(game_board) == 'Draw':
-            break
-
+        print('Bad parameters!')
+        continue
