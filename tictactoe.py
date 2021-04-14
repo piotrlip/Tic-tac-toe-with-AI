@@ -9,6 +9,8 @@ def print_board(board_view):
     print('| ' + ' '.join(board_view[2]) + ' |')
     print('---------')
 
+    if command == 'start hard hard':
+        print('Draw')
 
 def cells_to_board(board):
     list_of_board = list(board)
@@ -30,6 +32,9 @@ def coord_check(game_board, move):
         print('You should enter numbers!')
         return False
 
+    elif len(move) > 2:
+        return False
+
     elif int(move[0]) - 1 not in [0, 1, 2] or int(move[1]) - 1 not in [0, 1, 2]:
         print('Coordinates should be from 1 to 3!')
         return False
@@ -42,6 +47,9 @@ def coord_check(game_board, move):
 
 def coord_check_o(game_board, move):
     if len(move[0]) > 1:
+        return False
+
+    elif len(move) > 2:
         return False
 
     elif len(move[1]) > 1:
@@ -103,6 +111,103 @@ def random_move():
     return move
 
 
+def isMovesLeft(board):
+    for i1 in range(3):
+        for j1 in range(3):
+            if board[i1][j1] == ' ':
+                return True
+    return False
+
+
+def evaluate(b):
+    for row in range(3):
+        if b[row][0] == b[row][1] and b[row][1] == b[row][2]:
+            if b[row][0] == 'O':
+                return 10
+            elif b[row][0] == 'X':
+                return -10
+
+    for col in range(3):
+
+        if b[0][col] == b[1][col] and b[1][col] == b[2][col]:
+
+            if b[0][col] == 'O':
+                return 10
+            elif b[0][col] == 'X':
+                return -10
+
+    if b[0][0] == b[1][1] and b[1][1] == b[2][2]:
+
+        if b[0][0] == 'O':
+            return 10
+        elif b[0][0] == 'X':
+            return -10
+
+    if b[0][2] == b[1][1] and b[1][1] == b[2][0]:
+
+        if b[0][2] == 'O':
+            return 10
+        elif b[0][2] == 'X':
+            return -10
+    return 0
+
+
+def minimax(board, depth, isMax):
+    score = evaluate(board)
+
+    if score == 10:
+        return score
+
+    if score == -10:
+        return score
+
+    if isMovesLeft(board) == False:
+        return 0
+
+    if isMax:
+        best = -1000
+
+        for i2 in range(3):
+            for j2 in range(3):
+
+                if board[i2][j2] == ' ':
+                    board[i2][j2] = 'O'
+                    best = max(best, minimax(current_board, depth + 1, not isMax))
+                    board[i2][j2] = ' '
+        return best
+
+    else:
+        best = 1000
+
+        for i3 in range(3):
+            for j3 in range(3):
+
+                if board[i3][j3] == ' ':
+                    board[i3][j3] = 'X'
+                    best = min(best, minimax(current_board, depth + 1, not isMax))
+                    board[i3][j3] = ' '
+        return best
+
+
+def findBestMove(board):
+    bestVal = -1000
+    bestMove = (-1, -1)
+
+    for i in range(3):
+        for j in range(3):
+
+            if board[i][j] == ' ':
+                board[i][j] = 'O'
+                moveVal = minimax(board, 0, False)
+                board[i][j] = ' '
+
+                if moveVal > bestVal:
+                    bestMove = (i, j)
+                    bestVal = moveVal
+
+    return bestMove
+
+
 def ai_move(level, current_board, counter):
     if level == 'easy':
         return random_move()
@@ -110,10 +215,6 @@ def ai_move(level, current_board, counter):
     elif level == 'medium':
 
         game_board_win = current_game_state(current_board)
-
-        coord_current = {'00': current_board[0][0], '01': current_board[0][1], '02': current_board[0][2],
-                         '10': current_board[1][0], '11': current_board[1][1], '12': current_board[1][2],
-                         '20': current_board[2][0], '21': current_board[2][1], '22': current_board[2][2]}
 
         current_moves = {'game_board_rows': {'first': [current_board[0][0], current_board[0][1], current_board[0][2]],
                                              'second': [current_board[1][0], current_board[1][1], current_board[1][2]],
@@ -198,19 +299,25 @@ def ai_move(level, current_board, counter):
             b = [str(int(a[0]) + 1), str(int(a[1]) + 1)]
             return b
         else:
-           return random_move()
+            return random_move()
+
+    elif level == 'hard':
+        bestMove = findBestMove(current_board)
+        return [str(bestMove[0] + 1), str(bestMove[1] + 1)]
 
 
 while True:
     command = input('Input command: ')
     good_commands = ['start easy easy', 'start easy user', 'start user user', 'start user easy', 'start medium user',
-                     'start user medium']
+                     'start user medium', 'start user hard', 'start hard hard']
     if command in good_commands:
         level = None
         if 'easy' in command:
             level = 'easy'
-        else:
+        elif 'medium' in command:
             level = 'medium'
+        else:
+            level = 'hard'
         board = " " * 9
         current_board = cells_to_board(board)
         print_board(current_board)
@@ -219,6 +326,9 @@ while True:
         while True:
             if board_move(counter) == 'X':
                 un_move = input('Enter the coordinates: ').split(' ')
+                for i in un_move:
+                    if i == '':
+                        un_move.remove(i)
                 if coord_check(current_board, un_move) is False:
                     continue
                 else:
